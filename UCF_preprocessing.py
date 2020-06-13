@@ -4,9 +4,9 @@ import os, cv2, random
 import shutil
 import scipy.misc
 import time
-from .OF_utils import optical_flow_prep
-from .dmd_preprocessing import dmd_prep
-from .mrdmd_preprocessing import mrdmd_prep
+#from .OF_utils import optical_flow_prep
+from dmd_preprocessing import dmd_prep
+#from .mrdmd_preprocessing import mrdmd_prep
 from PIL import Image
 
 def combine_list_txt(list_dir):

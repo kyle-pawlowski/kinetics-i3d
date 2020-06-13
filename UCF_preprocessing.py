@@ -209,9 +209,8 @@ def preprocess_flow_image(flow_dir):
                 os.remove(flow_image_dir)
 
 
-def regenerate_data(data_dir, list_dir, UCF_dir, temporal='OF',random=False):
+def regenerate_data(data_dir, list_dir, UCF_dir, sequence_length=10,temporal='OF',random=False):
     start_time = time.time()
-    sequence_length = 10
     image_size = (216, 216, 3)
     if 'MrDMD' in temporal:
         dest_dir = os.path.join(data_dir,'UCF-Preprocessed-MrDMD')
@@ -246,7 +245,7 @@ if __name__ == '__main__':
     '''
         extract frames from videos as npy files
     '''
-    sequence_length = 10
+    sequence_length = 16
     image_size = (216, 216, 3)
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
@@ -274,4 +273,4 @@ if __name__ == '__main__':
     # preprocess_flow_image(flow_dir)
 
     # generate sequence and optical flow data
-    regenerate_data(data_dir, list_dir, UCF_dir)
+    regenerate_data(data_dir, list_dir, UCF_dir,sequence_length=sequence_length,temporal='DMD')

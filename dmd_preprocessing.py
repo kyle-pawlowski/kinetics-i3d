@@ -57,7 +57,7 @@ def dmd_prep(src_dir, dest_dir, window, svd_rank, overwrite=False):
             # print('No.{} class {} finished, data saved in {}'.format(index, class_name, dest_class_dir))
  
 
-def _stack_dmd(frames, window, svd_rank, grey=True, deeper=False):
+def _stack_dmd(frames, window, svd_rank, grey=True, deeper=False, i3d=True):
     if frames.dtype != np.float32:
         frames = frames.astype(np.float32)
         warnings.warn('Warning! The data type has been changed to np.float32 for graylevel conversion...')
@@ -75,7 +75,9 @@ def _stack_dmd(frames, window, svd_rank, grey=True, deeper=False):
         mode = _compute_dmd(selection, svd_rank)
         if num_modes is None: 
             num_modes = mode.shape[1]
-            if grey and not deeper:
+            if i3d:
+                output_shape = (num_sequences-window+1,height,width,num_modes)
+            elif grey and not deeper:
                 output_shape = (height,width*num_modes,num_sequences-window+1)
             elif not grey and deeper:
                 output_shape = (num_sequences-window+1,height*color_ch,width,num_modes)  # dmd_modes shape is (139,968, num_modes, num_windows)
@@ -84,7 +86,7 @@ def _stack_dmd(frames, window, svd_rank, grey=True, deeper=False):
             else:
                 output_shape = (height*color_ch,width*num_modes,num_sequences-window+1)
             modes = np.ndarray(shape=output_shape)
-        if not deeper:
+        if not deeper and not i3d:
             mode = np.reshape(mode.T,output_shape[0:-1])
             modes[:,:,i] = mode
         else:

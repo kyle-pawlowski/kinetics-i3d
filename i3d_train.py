@@ -26,7 +26,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     #class_index = tf.constant(class_index)
     input_shape = (216,864,6)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=((10,216,864,6),(10,101)),
+                                          output_shapes=((1,10,216,864,6),(10,101)),
                                           args=(train_data,10, input_shape, num_classes)).repeat()
     
     
@@ -52,11 +52,10 @@ def session_train(optimizer):
     predictions = tf.nn.softmax(logits)
     loss = tf.reduce_mean(tf.abs(predictions - flow_answers))
         
-    feed_dict = {}
     data = data_gen().prefetch(1)
     iterator = data.make_initializable_iterator()
     datax,datay = iterator.get_next()
-    feed_dict[flow_input] = tf.cast(tf.reshape(datax,(10,6,216,216,4)),tf.float32)
+    datax=tf.cast(tf.reshape(datax,(10,6,216,216,4)),tf.float32)
     
     global_step = tf.Variable(0,tf.int64)
     training_opt = optimizer.minimize(loss,global_step=global_step)
@@ -64,6 +63,9 @@ def session_train(optimizer):
     sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,hooks=[sync_replicas_hook]) as sess:
         while not sess.should_stop():
+            feed_dict = {}
+            sess.run(iterator.initializer)
+            feed_dict[flow_input] = sess.run(datax)
             out_logits, out_predictions = sess.run(
                 [training_opt],feed_dict=feed_dict)
     

@@ -23,11 +23,13 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     train_data, test_data, class_index = get_data_list(list_dir, video_dir)
     train_data = tf.constant(np.array(train_data))
     test_data = tf.constant(np.array(test_data))
+    n = tf.constant(num_classes)
+    batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     input_shape = (12,216,216,4)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=((10,12,216,216,4),(10,101)),
-                                          args=(train_data,10, input_shape, num_classes)).repeat()
+                                          output_shapes=(tf.TensorShape([10,12,216,216,4]),tf.TensorShape([10,101])),
+                                          args=(train_data,batch_size, input_shape, n))
     
     
 #from https://www.tensorflow.org/guide/checkpoint
@@ -44,7 +46,7 @@ def train_step(net, example, optimizer):
   return loss
 
 def session_train(optimizer):
-    flow_input = tf.placeholder(tf.float32,shape=(10,12,216,216,4))
+    flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
     flow_answers = tf.placeholder(tf.float32,shape=(10,101))
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')
@@ -53,7 +55,7 @@ def session_train(optimizer):
     loss = tf.reduce_mean(tf.abs(predictions - flow_answers))
         
     data = data_gen()
-    iterator = tf.compat.v1.data.make_initializable_iterator(data)
+    iterator = tf.compat.v1.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)
     
@@ -64,11 +66,9 @@ def session_train(optimizer):
     with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,hooks=[sync_replicas_hook]) as sess:
         while not sess.should_stop():
             feed_dict = {}
-            sess.run(iterator.initializer)
             feed_dict[flow_input] = sess.run(datax)
             feed_dict[flow_answers] = sess.run(datay)
-            out_logits, out_predictions = sess.run(
-                training_opt,feed_dict=feed_dict)
+            result = sess.run(training_opt,feed_dict=feed_dict)
     
         
     

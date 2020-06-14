@@ -64,7 +64,6 @@ def sequence_generator(data_list, batch_size, input_shape, num_classes):
                 print('shape should be '+str(batch_x.shape)+' but is actually '+str(clip_data.shape))
                 raise ValueError('The number of time sequence is inconsistent with the video data')
             batch_x[i] = clip_data
-        batch_x = np.reshape(batch_x,(1,)+batch_x.shape)
         yield batch_x, batch_y
 
 

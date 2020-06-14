@@ -21,12 +21,12 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     list_dir = os.path.join(data_dir,label_folder)   
     video_dir = os.path.join(data_dir,data_folder)
     train_data, test_data, class_index = get_data_list(list_dir, video_dir)
-    train_data = tf.Variable(np.array(train_data))
-    test_data = tf.Variable(np.array(test_data))
+    train_data = tf.constant(np.array(train_data))
+    test_data = tf.constant(np.array(test_data))
     #class_index = tf.constant(class_index)
-    input_shape = (216,864,6)
+    input_shape = (12,216,216,4)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=((1,10,216,864,6),(10,101)),
+                                          output_shapes=((10,12,216,216,4),(10,101)),
                                           args=(train_data,10, input_shape, num_classes)).repeat()
     
     
@@ -44,18 +44,18 @@ def train_step(net, example, optimizer):
   return loss
 
 def session_train(optimizer):
-    flow_input = tf.placeholder(tf.float32,shape=(10,50,216,216,4))
-    flow_answers = tf.placeholder(tf.float32,shape=(1,10,101))
+    flow_input = tf.placeholder(tf.float32,shape=(10,12,216,216,4))
+    flow_answers = tf.placeholder(tf.float32,shape=(10,101))
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')
         logits, _ = i3d(flow_input,is_training=True)
     predictions = tf.nn.softmax(logits)
     loss = tf.reduce_mean(tf.abs(predictions - flow_answers))
         
-    data = data_gen().prefetch(1)
-    iterator = data.make_initializable_iterator()
+    data = data_gen()
+    iterator = tf.compat.v1.data.make_initializable_iterator(data)
     datax,datay = iterator.get_next()
-    datax=tf.cast(tf.reshape(datax,(10,6,216,216,4)),tf.float32)
+    datax=tf.cast(datax,tf.float32)
     
     global_step = tf.Variable(0,tf.int64)
     training_opt = optimizer.minimize(loss,global_step=global_step)
@@ -66,8 +66,9 @@ def session_train(optimizer):
             feed_dict = {}
             sess.run(iterator.initializer)
             feed_dict[flow_input] = sess.run(datax)
+            feed_dict[flow_answers] = sess.run(datay)
             out_logits, out_predictions = sess.run(
-                [training_opt],feed_dict=feed_dict)
+                training_opt,feed_dict=feed_dict)
     
         
     
@@ -76,7 +77,7 @@ def train_network():
 
     # optimizers from https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/train/SyncReplicasOptimizer
     opt = GradientDescentOptimizer(learning_rate=0.1)
-    opt = SyncReplicasOptimizer(opt, replicas_to_aggregate=10,total_num_replicas=10)
+    opt = SyncReplicasOptimizer(opt, replicas_to_aggregate=1,total_num_replicas=1)
     '''for example in iter(data_gen()):
         print("loop")
         train_step(i3d,example,opt)'''

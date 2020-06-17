@@ -97,8 +97,8 @@ def session_train(optimizer,epochs):
             feed_dict[flow_input] = sess.run(datax)
             feed_dict[flow_answers] = sess.run(datay)
             epoch_loss, result = sess.run([loss,training_opt],feed_dict=feed_dict)
-            with train_summary_writer.as_default():
-                tf.summary.scaler('loss', epoch_loss,step=epoch)
+            print('loss: '+str(epoch_loss))
+            #tf.summary.scaler('loss', epoch_loss,step=epoch)
             #ckpt.step.assign_add(1)
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)

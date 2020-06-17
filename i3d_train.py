@@ -86,7 +86,6 @@ def session_train(optimizer,epochs):
     training_opt = optimizer.minimize(loss,global_step=tf.compat.v1.train.get_global_step())
     is_chief = True
     sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
-    step_counter_hook.begin()
     with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,
                                                      hooks=[sync_replicas_hook,step_counter_hook],
                                                      checkpoint_dir='./tf_ckpts',
@@ -97,7 +96,9 @@ def session_train(optimizer,epochs):
             feed_dict = {}
             feed_dict[flow_input] = sess.run(datax)
             feed_dict[flow_answers] = sess.run(datay)
-            sess.run(training_opt,feed_dict=feed_dict)
+            epoch_loss, result = sess.run([loss,training_opt],feed_dict=feed_dict)
+            with train_summary_writer.as_default():
+                tf.summary.scaler('loss', epoch_loss,step=epoch)
             #ckpt.step.assign_add(1)
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)

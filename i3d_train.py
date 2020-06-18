@@ -15,6 +15,7 @@ import datetime
 
 #tf.compat.v1.enable_eager_execution()
 num_classes = 101
+batch_size = 10
 
 def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     cwd = os.getcwd()
@@ -28,7 +29,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     input_shape = (12,216,216,4)
-    return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
+    return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float32,tf.float32),
                                           output_shapes=(tf.TensorShape([10,12,216,216,4]),tf.TensorShape([10,101])),
                                           args=(train_data,batch_size, input_shape, n))
     
@@ -55,6 +56,12 @@ def session_train(optimizer,epochs):
         logits, _ = i3d(flow_input,is_training=True)
     predictions = tf.nn.softmax(logits)
     loss = tf.reduce_mean(tf.abs(predictions - flow_answers))
+    maxes = tf.math.reduce_max(predictions,axis=[1],keepdims=True)
+    guesses = tf.math.equal(predictions,maxes)
+    correct = tf.math.logical_and(guesses,tf.math.equal(flow_answers,tf.constant(1,dtype=tf.float32)))
+    correct = tf.cast(correct,tf.uint8)
+    accuracy = (tf.math.reduce_sum(correct)/batch_size)*100
+    
     
     #create data iterator
     data = data_gen()
@@ -79,6 +86,8 @@ def session_train(optimizer,epochs):
     #savior = tf.train.Saver(var_list=variable_map, reshape=True)
     #ckpt = tf.train.Checkpoint(optimizer=optimizer, model=i3d)
     #manager = tf.train.CheckpointManager(ckpt, './tf_ckpts', max_to_keep=3)
+    tf.summary.scalar('loss', loss)
+    tf.summary.scalar('accuracy', accuracy)
     
     #evaluation
     global_step = tf.compat.v1.train.get_or_create_global_step()
@@ -96,9 +105,9 @@ def session_train(optimizer,epochs):
             feed_dict = {}
             feed_dict[flow_input] = sess.run(datax)
             feed_dict[flow_answers] = sess.run(datay)
-            epoch_loss, result = sess.run([loss,training_opt],feed_dict=feed_dict)
+            epoch_loss, epoch_accuracy, result = sess.run([loss,accuracy,training_opt],feed_dict=feed_dict)
             print('loss: '+str(epoch_loss))
-            #tf.summary.scaler('loss', epoch_loss,step=epoch)
+            print('accuracy: ' + str(accuracy))
             #ckpt.step.assign_add(1)
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)

@@ -68,6 +68,7 @@ def session_train(optimizer,epochs):
     iterator = tf.compat.v1.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)
+    datay=tf.cast(datay,tf.float32)
     
     #create folders for summary logs
     # https://www.tensorflow.org/tensorboard/get_started

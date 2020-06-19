@@ -29,7 +29,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     input_shape = (12,216,216,4)
-    return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float32,tf.float32),
+    return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
                                           output_shapes=(tf.TensorShape([10,12,216,216,4]),tf.TensorShape([10,101])),
                                           args=(train_data,batch_size, input_shape, n))
     
@@ -48,9 +48,18 @@ def train_step(net, example, optimizer):
   return loss
 
 def session_train(optimizer,epochs):
+    #create data iterator
+    data = data_gen()
+    iterator = tf.compat.v1.data.make_one_shot_iterator(data)
+    datax,datay = iterator.get_next()
+    datax=tf.cast(datax,tf.float32)
+    datay=tf.cast(datay,tf.float32)
+    
     #build network with fake inputs
-    flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
-    flow_answers = tf.placeholder(tf.float32,shape=(10,101))
+    #flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
+    #flow_answers = tf.placeholder(tf.float32,shape=(10,101))
+    flow_input = datax
+    flow_answers = datay
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')
         logits, _ = i3d(flow_input,is_training=True)
@@ -61,14 +70,6 @@ def session_train(optimizer,epochs):
     correct = tf.math.logical_and(guesses,tf.math.equal(flow_answers,tf.constant(1,dtype=tf.float32)))
     correct = tf.cast(correct,tf.uint8)
     accuracy = (tf.math.reduce_sum(correct)/batch_size)*100
-    
-    
-    #create data iterator
-    data = data_gen()
-    iterator = tf.compat.v1.data.make_one_shot_iterator(data)
-    datax,datay = iterator.get_next()
-    datax=tf.cast(datax,tf.float32)
-    datay=tf.cast(datay,tf.float32)
     
     #create folders for summary logs
     # https://www.tensorflow.org/tensorboard/get_started
@@ -104,11 +105,10 @@ def session_train(optimizer,epochs):
                                                     save_checkpoint_steps=2) as sess:
         for epoch in range(epochs):
             feed_dict = {}
-            feed_dict[flow_input] = sess.run(datax)
-            feed_dict[flow_answers] = sess.run(datay)
-            epoch_loss, epoch_accuracy, result = sess.run([loss,accuracy,training_opt],feed_dict=feed_dict)
+            #feed_dict[flow_input],feed_dict[flow_answers] = sess.run([datax,datay])
+            epoch_loss, epoch_accuracy, result = sess.run([loss,accuracy,training_opt])
             print('loss: '+str(epoch_loss))
-            print('accuracy: ' + str(accuracy))
+            print('accuracy: ' + str(epoch_accuracy))
             #ckpt.step.assign_add(1)
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)

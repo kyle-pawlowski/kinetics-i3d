@@ -15,7 +15,7 @@ import datetime
 
 #tf.compat.v1.enable_eager_execution()
 num_classes = 101
-batch_size = 10
+batch_size = 100
 
 def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     cwd = os.getcwd()
@@ -26,11 +26,11 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     train_data = tf.constant(np.array(train_data))
     test_data = tf.constant(np.array(test_data))
     n = tf.constant(num_classes)
-    batch_size = tf.constant(10)
+    #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     input_shape = (12,216,216,4)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=(tf.TensorShape([10,12,216,216,4]),tf.TensorShape([10,101])),
+                                          output_shapes=(tf.TensorShape([batch_size,12,216,216,4]),tf.TensorShape([batch_size,101])),
                                           args=(train_data,batch_size, input_shape, n))
     
     
@@ -94,11 +94,12 @@ def session_train(optimizer,epochs):
     #evaluation
     global_step = tf.compat.v1.train.get_or_create_global_step()
     step_counter_hook = tf.estimator.StepCounterHook(summary_writer=train_summary_writer)
-    training_opt = optimizer.minimize(loss,global_step=tf.compat.v1.train.get_global_step())
+    training_opt = optimizer.minimize(loss,var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'),
+                                      global_step=tf.compat.v1.train.get_global_step())
     is_chief = True
-    sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
+    #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,
-                                                     hooks=[sync_replicas_hook,step_counter_hook],
+                                                     hooks=[step_counter_hook],
                                                      checkpoint_dir='./tf_ckpts',
                                                      summary_dir='./logs',
                                                      save_summaries_steps=1,
@@ -118,11 +119,12 @@ def train_network():
 
     # optimizers from https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/train/SyncReplicasOptimizer
     opt = GradientDescentOptimizer(learning_rate=0.1)
-    opt = SyncReplicasOptimizer(opt, replicas_to_aggregate=1,total_num_replicas=1)
+    #opt = SyncReplicasOptimizer(opt, replicas_to_aggregate=1,total_num_replicas=1)
     '''for example in iter(data_gen()):
         print("loop")
         train_step(i3d,example,opt)'''
-    session_train(opt,2)
+    session_train(opt,10)
     
 if __name__ is "__main__":
+    tf.reset_default_graph()
     train_network()

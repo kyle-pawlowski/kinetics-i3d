@@ -15,7 +15,7 @@ import datetime
 
 #tf.compat.v1.enable_eager_execution()
 num_classes = 101
-batch_size = 100
+batch_size = 10
 
 def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     cwd = os.getcwd()
@@ -90,12 +90,14 @@ def session_train(optimizer,epochs):
     #manager = tf.train.CheckpointManager(ckpt, './tf_ckpts', max_to_keep=3)
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
+    layers = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow')
     
     #evaluation
     global_step = tf.compat.v1.train.get_or_create_global_step()
     step_counter_hook = tf.estimator.StepCounterHook(summary_writer=train_summary_writer)
     training_opt = optimizer.minimize(loss,var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'),
                                       global_step=tf.compat.v1.train.get_global_step())
+    gradients = tf.gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'))
     is_chief = True
     #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,
@@ -107,7 +109,7 @@ def session_train(optimizer,epochs):
         for epoch in range(epochs):
             feed_dict = {}
             #feed_dict[flow_input],feed_dict[flow_answers] = sess.run([datax,datay])
-            epoch_loss, epoch_accuracy, result = sess.run([loss,accuracy,training_opt])
+            x,y,epoch_loss, epoch_accuracy, epoch_layers, grads, result = sess.run([datax,datay,loss,accuracy,layers,gradients,training_opt])
             print('loss: '+str(epoch_loss))
             print('accuracy: ' + str(epoch_accuracy))
             #ckpt.step.assign_add(1)

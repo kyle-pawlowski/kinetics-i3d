@@ -249,6 +249,8 @@ if __name__ == '__main__':
     image_size = (216, 216, 3)
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
+    '''list_dir = os.path.join(data_dir,'hmdb51_test_train_splits')
+    UCF_dir = os.path.join(data_dir,'hmdb51_org')'''
     list_dir = os.path.join(data_dir, 'ucfTrainTestlist')
     UCF_dir = os.path.join(data_dir, 'UCF-101')
     frames_dir = os.path.join(data_dir, 'frames/mean.npy')

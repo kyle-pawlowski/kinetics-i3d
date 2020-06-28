@@ -13,6 +13,7 @@ import numpy as np
 from i3d import InceptionI3d
 from UCF_utils import sequence_generator, get_data_list
 import datetime
+import sys
 
 #tf.compat.v1.enable_eager_execution()
 num_classes = 11
@@ -48,9 +49,16 @@ def train_step(net, example, optimizer):
   optimizer.apply_gradients(zip(gradients, variables))
   return loss
 
-def session_train(optimizer,epochs):
+def session_train(optimizer,epochs,data_folder):
     #create data iterator
-    data = data_gen(label_folder='ucf11TrainTestlist')
+    if 'dmd' in dataset.lower():
+        data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist')
+        checkpoint_dir = './tf_ckpts'
+        log_dir = './logs'
+    else:
+        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist')
+        checkpoint_dir = './tf_ckpts_of'
+        log_dir = './logs_of'
     iterator = tf.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)
@@ -108,8 +116,8 @@ def session_train(optimizer,epochs):
     #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.train.MonitoredTrainingSession(is_chief=is_chief,
                                                      hooks=[step_counter_hook],
-                                                     checkpoint_dir='./tf_ckpts',
-                                                     summary_dir='./logs',
+                                                     checkpoint_dir=checkpoint_dir,
+                                                     summary_dir=log_dir,
                                                      save_summaries_steps=1,
                                                     save_checkpoint_steps=2) as sess:
         for epoch in range(epochs):
@@ -122,7 +130,7 @@ def session_train(optimizer,epochs):
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)
     
-def train_network():
+def train_network(dataset):
     #i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=False,final_endpoint='Predictions')
 
     # optimizers from https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/train/SyncReplicasOptimizer
@@ -131,8 +139,12 @@ def train_network():
     '''for example in iter(data_gen()):
         print("loop")
         train_step(i3d,example,opt)'''
-    session_train(opt,100)
+    session_train(opt,100,dataset)
     
 if __name__ is "__main__":
     tf.reset_default_graph()
-    train_network()
+    dataset='DMD'
+    if len(sys.argv) > 1:
+        dataset = sys.argv[1]
+    train_network(dataset)
+    

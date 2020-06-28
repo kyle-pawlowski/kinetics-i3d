@@ -6,8 +6,13 @@ Created on Wed Jun  3 21:06:59 2020
 """
 import os
 import tensorflow as tf
+<<<<<<< HEAD
 from tensorflow.compat.v1.train import GradientDescentOptimizer, SyncReplicasOptimizer
 import tensorflow_transform as tft
+=======
+from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
+#import tensorflow_transform as tft
+>>>>>>> 578633d... remove tensorflow transform import
 import sonnet as snt
 import numpy as np
 from i3d import InceptionI3d

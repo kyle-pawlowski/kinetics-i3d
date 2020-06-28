@@ -7,12 +7,17 @@ Created on Wed Jun  3 21:06:59 2020
 import os
 import tensorflow as tf
 <<<<<<< HEAD
+<<<<<<< HEAD
 from tensorflow.compat.v1.train import GradientDescentOptimizer, SyncReplicasOptimizer
 import tensorflow_transform as tft
 =======
 from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
 #import tensorflow_transform as tft
 >>>>>>> 578633d... remove tensorflow transform import
+=======
+from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
+#import tensorflow_transform as tft
+>>>>>>> 8ec606fd5490e4ced9a1fd79b9e4ad209184c500
 import sonnet as snt
 import numpy as np
 from i3d import InceptionI3d
@@ -56,7 +61,7 @@ def train_step(net, example, optimizer):
 def session_train(optimizer,epochs):
     #create data iterator
     data = data_gen(label_folder='ucf11TrainTestlist')
-    iterator = tf.compat.v1.data.make_one_shot_iterator(data)
+    iterator = tf.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)
     datay=tf.cast(datay,tf.float32)
@@ -86,7 +91,7 @@ def session_train(optimizer,epochs):
     # https://www.tensorflow.org/tensorboard/get_started
     time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     train_log_dir = 'logs/training' + time
-    train_summary_writer = tf.compat.v1.summary.FileWriter(train_log_dir)
+    train_summary_writer = tf.summary.FileWriter(train_log_dir)
     
     #create variable map to save like in evaluate sample
     variable_map = {}
@@ -104,14 +109,14 @@ def session_train(optimizer,epochs):
     layers = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow')
     
     #evaluation
-    global_step = tf.compat.v1.train.get_or_create_global_step()
+    global_step = tf.train.get_or_create_global_step()
     step_counter_hook = tf.estimator.StepCounterHook(summary_writer=train_summary_writer)
     training_opt = optimizer.minimize(loss,var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'),
-                                      global_step=tf.compat.v1.train.get_global_step())
+                                      global_step=tf.train.get_global_step())
     gradients = tf.gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'))
     is_chief = True
     #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
-    with tf.compat.v1.train.MonitoredTrainingSession(is_chief=is_chief,
+    with tf.train.MonitoredTrainingSession(is_chief=is_chief,
                                                      hooks=[step_counter_hook],
                                                      checkpoint_dir='./tf_ckpts',
                                                      summary_dir='./logs',

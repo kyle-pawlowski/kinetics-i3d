@@ -7,6 +7,7 @@ Created on Wed Jun  3 21:06:59 2020
 import os
 import tensorflow as tf
 from tensorflow.compat.v1.train import GradientDescentOptimizer, SyncReplicasOptimizer
+import tensorflow_transform as tft
 import sonnet as snt
 import numpy as np
 from i3d import InceptionI3d
@@ -59,6 +60,11 @@ def session_train(optimizer,epochs):
     #flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
     #flow_answers = tf.placeholder(tf.float32,shape=(10,101))
     flow_input = datax
+    #normalize x values
+    maxx = tf.math.reduce_max(datax,axis=(2,3,4),keepdims=True)
+    low_numbers = tf.constant(0.0001,shape=[batch_size,12,1,1,1])
+    maxx = tf.where(maxx==0,maxx,low_numbers)
+    datax = datax/maxx
     flow_answers = datay
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')

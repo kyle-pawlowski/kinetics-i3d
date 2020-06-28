@@ -6,6 +6,7 @@ import scipy.misc
 import time
 #from .OF_utils import optical_flow_prep
 from dmd_preprocessing import dmd_prep
+from OF_utils import optical_flow_prep
 #from .mrdmd_preprocessing import mrdmd_prep
 from PIL import Image
 
@@ -290,4 +291,4 @@ if __name__ == '__main__':
     # preprocess_flow_image(flow_dir)
 
     # generate sequence and optical flow data
-    regenerate_data(data_dir, list_dir, UCF_dir,sequence_length=sequence_length,temporal='DMD')
+    regenerate_data(data_dir, list_dir, UCF_dir,sequence_length=sequence_length,temporal='OF')

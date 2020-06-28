@@ -7,7 +7,7 @@ Created on Wed Jun  3 21:06:59 2020
 import os
 import tensorflow as tf
 from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
-import tensorflow_transform as tft
+#import tensorflow_transform as tft
 import sonnet as snt
 import numpy as np
 from i3d import InceptionI3d

@@ -31,7 +31,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     #class_index = tf.constant(class_index)
     input_shape = (12,216,216,4)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=(tf.TensorShape([batch_size,12,216,216,4]),tf.TensorShape([batch_size,101])),
+                                          output_shapes=(tf.TensorShape([batch_size,12,216,216,4]),tf.TensorShape([batch_size,num_classes])),
                                           args=(train_data,batch_size, input_shape, n))
     
     

@@ -15,8 +15,8 @@ from UCF_utils import sequence_generator, get_data_list
 import datetime
 
 #tf.compat.v1.enable_eager_execution()
-num_classes = 101
-batch_size = 10
+num_classes = 11
+batch_size = 100
 
 def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     cwd = os.getcwd()
@@ -50,7 +50,7 @@ def train_step(net, example, optimizer):
 
 def session_train(optimizer,epochs):
     #create data iterator
-    data = data_gen()
+    data = data_gen(label_folder='ucf11TrainTestlist')
     iterator = tf.compat.v1.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)

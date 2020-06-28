@@ -6,18 +6,8 @@ Created on Wed Jun  3 21:06:59 2020
 """
 import os
 import tensorflow as tf
-<<<<<<< HEAD
-<<<<<<< HEAD
 from tensorflow.compat.v1.train import GradientDescentOptimizer, SyncReplicasOptimizer
-import tensorflow_transform as tft
-=======
-from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
 #import tensorflow_transform as tft
->>>>>>> 578633d... remove tensorflow transform import
-=======
-from tensorflow.train import GradientDescentOptimizer, SyncReplicasOptimizer
-#import tensorflow_transform as tft
->>>>>>> 8ec606fd5490e4ced9a1fd79b9e4ad209184c500
 import sonnet as snt
 import numpy as np
 from i3d import InceptionI3d
@@ -42,7 +32,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     input_shape = (12,216,216,4)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
                                           output_shapes=(tf.TensorShape([batch_size,12,216,216,4]),tf.TensorShape([batch_size,num_classes])),
-                                          args=(train_data,batch_size, input_shape, n))
+                                          args=(train_data,batch_size, input_shape, n)).repeat()
     
     
 #from https://www.tensorflow.org/guide/checkpoint
@@ -141,7 +131,7 @@ def train_network():
     '''for example in iter(data_gen()):
         print("loop")
         train_step(i3d,example,opt)'''
-    session_train(opt,10)
+    session_train(opt,100)
     
 if __name__ is "__main__":
     tf.reset_default_graph()

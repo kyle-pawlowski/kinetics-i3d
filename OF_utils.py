@@ -58,13 +58,16 @@ def optical_flow_prep(src_dir, dest_dir, mean_sub=True, overwrite=False):
     print('Finish computing optical flows')
 
 
-def stack_optical_flow(frames, mean_sub=False):
+def stack_optical_flow(frames, mean_sub=False, i3d=True):
     if frames.dtype != np.float32:
         frames = frames.astype(np.float32)
         warnings.warn('Warning! The data type has been changed to np.float32 for graylevel conversion...')
     frame_shape = frames.shape[1:-1]  # e.g. frames.shape is (10, 216, 216, 3)
     num_sequences = frames.shape[0]
-    output_shape = frame_shape + (2 * (num_sequences - 1),)  # stacked_optical_flow.shape is (216, 216, 18)
+    if i3d:
+        output_shape = (num_sequences,)+frame_shape+(2,)
+    else:
+        output_shape = frame_shape + (2 * (num_sequences - 1),)  # stacked_optical_flow.shape is (216, 216, 18)
     flows = np.ndarray(shape=output_shape)
 
     for i in range(num_sequences - 1):

@@ -76,7 +76,10 @@ def stack_optical_flow(frames, mean_sub=False, i3d=True):
         prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
         next_gray = cv2.cvtColor(next_frame, cv2.COLOR_BGR2GRAY)
         flow = _calc_optical_flow(prev_gray, next_gray)
-        flows[:, :, 2 * i:2 * i + 2] = flow
+        if i3d:
+            flows[i,:,:,:] = flow
+        else:
+            flows[:, :, 2 * i:2 * i + 2] = flow
 
     if mean_sub:
         flows_x = flows[:, :, 0:2 * (num_sequences - 1):2]

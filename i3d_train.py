@@ -19,7 +19,7 @@ import sys
 num_classes = 11
 batch_size = 100
 
-def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
+def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD'):
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
     list_dir = os.path.join(data_dir,label_folder)   
@@ -30,9 +30,12 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist'):
     n = tf.constant(num_classes)
     #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
-    input_shape = (12,216,216,4)
+    if 'dmd' in data_type.lower():
+        input_shape = (12,216,216,4)
+    else:
+        input_shape = (12,216,216,2)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
-                                          output_shapes=(tf.TensorShape([batch_size,12,216,216,4]),tf.TensorShape([batch_size,num_classes])),
+                                          output_shapes=(tf.TensorShape([(batch_size,)+input_shape]),tf.TensorShape([batch_size,num_classes])),
                                           args=(train_data,batch_size, input_shape, n)).repeat()
     
     
@@ -56,7 +59,7 @@ def session_train(optimizer,epochs,data_folder):
         checkpoint_dir = './tf_ckpts'
         log_dir = './logs'
     else:
-        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist')
+        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF')
         checkpoint_dir = './tf_ckpts_of'
         log_dir = './logs_of'
     iterator = tf.data.make_one_shot_iterator(data)

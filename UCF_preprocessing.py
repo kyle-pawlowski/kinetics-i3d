@@ -9,6 +9,7 @@ from dmd_preprocessing import dmd_prep
 from OF_utils import optical_flow_prep
 #from .mrdmd_preprocessing import mrdmd_prep
 from PIL import Image
+import sys
 
 def combine_list_txt(list_dir):
     testlisttxt = 'testlist.txt'
@@ -259,7 +260,10 @@ if __name__ == '__main__':
     '''
         extract frames from videos as npy files
     '''
-    sequence_length = 16
+    dataset = 'DMD'
+    if len(sys.argv) > 1:
+        dataset = sys.argv[1]
+    sequence_length = 76
     image_size = (216, 216, 3)
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
@@ -291,4 +295,4 @@ if __name__ == '__main__':
     # preprocess_flow_image(flow_dir)
 
     # generate sequence and optical flow data
-    regenerate_data(data_dir, list_dir, UCF_dir,sequence_length=sequence_length,temporal='OF')
+    regenerate_data(data_dir, list_dir, UCF_dir,sequence_length=sequence_length,temporal=dataset)

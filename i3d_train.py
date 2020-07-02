@@ -126,7 +126,9 @@ def session_train(optimizer,epochs,data_folder):
         for epoch in range(epochs):
             feed_dict = {}
             #feed_dict[flow_input],feed_dict[flow_answers] = sess.run([datax,datay])
-            x,y,epoch_loss, epoch_accuracy, epoch_layers, grads, result = sess.run([datax,datay,loss,accuracy,layers,gradients,training_opt])
+            #x,y,epoch_loss, epoch_accuracy, epoch_layers, grads, result = sess.run([datax,datay,loss,accuracy,layers,gradients,training_opt])
+            epoch_loss, epoch_accuracy, result = sess.run([loss,accuracy,training_opt])
+ 
             print('loss: '+str(epoch_loss))
             print('accuracy: ' + str(epoch_accuracy))
             #ckpt.step.assign_add(1)

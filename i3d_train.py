@@ -92,7 +92,7 @@ def session_train(optimizer,epochs,data_folder):
     # https://www.tensorflow.org/tensorboard/get_started
     time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     train_log_dir = 'logs/training' + time
-    train_summary_writer = tf.summary.FileWriter(train_log_dir)
+    train_summary_writer = tf.summary.FileWriter(log_dir)
     
     #create variable map to save like in evaluate sample
     variable_map = {}

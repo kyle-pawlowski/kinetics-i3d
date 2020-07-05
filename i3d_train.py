@@ -18,6 +18,7 @@ import sys
 #tf.compat.v1.enable_eager_execution()
 num_classes = 11
 batch_size = 100
+seq_len = 76
 
 def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD'):
     cwd = os.getcwd()
@@ -31,9 +32,11 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='D
     #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     if 'dmd' in data_type.lower():
-        input_shape = (12,216,216,4)
+        seq_len = 76
+        seq_len = seq_len-4
+        input_shape = (seq_len,216,216,4)
     else:
-        input_shape = (12,216,216,2)
+        input_shape = (seq_len,216,216,2)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
                                           output_shapes=(tf.TensorShape([batch_size,input_shape[0],input_shape[1],input_shape[2],input_shape[3]]),tf.TensorShape([batch_size,num_classes])),
                                           args=(train_data,batch_size, input_shape, n)).repeat()
@@ -70,12 +73,12 @@ def session_train(optimizer,epochs,data_folder):
     #build network with fake inputs
     #flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
     #flow_answers = tf.placeholder(tf.float32,shape=(10,101))
-    flow_input = datax
     #normalize x values
     maxx = tf.math.reduce_max(datax,axis=(2,3,4),keepdims=True)
-    low_numbers = tf.constant(0.0001,shape=[batch_size,12,1,1,1])
+    low_numbers = tf.constant(0.0001,shape=[batch_size,seq_len,1,1,1])
     maxx = tf.where(maxx==0,maxx,low_numbers)
     datax = datax/maxx
+    flow_input = datax
     flow_answers = datay
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')
@@ -151,5 +154,7 @@ if __name__ is "__main__":
     dataset='DMD'
     if len(sys.argv) > 1:
         dataset = sys.argv[1]
+    if 'dmd' in dataset.lower():
+        seq_len = seq_len -4
     train_network(dataset)
     

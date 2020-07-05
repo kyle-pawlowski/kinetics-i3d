@@ -66,7 +66,7 @@ def process_clip(src_dir, dst_dir, seq_len, img_size, mean=None, normalization=T
         np.save(dst_dir, all_frames)
     else:
         clip_length = len(all_frames)
-        if clip_length < seq_len:
+        if clip_length <= seq_len:
             print(src_dir, ' has no enough frames')
             with open(list_dir,'r') as file_list:
                 files = file_list.readlines()

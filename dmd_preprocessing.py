@@ -6,6 +6,8 @@ import shutil
 import warnings
 import cv2
 
+from data_visualizer import np_to_video
+
 def dmd_prep(src_dir, dest_dir, window, svd_rank, overwrite=False):
     train_dir = os.path.join(src_dir, 'train')
     test_dir = os.path.join(src_dir, 'test')
@@ -90,7 +92,7 @@ def _stack_dmd(frames, window, svd_rank, grey=True, deeper=False, i3d=True):
             mode = np.reshape(mode.T,output_shape[0:-1])
             modes[:,:,i] = mode
         else:
-            mode = np.reshape(mode.T,output_shape[1:])
+            mode = np.reshape(mode,output_shape[1:])
             modes[i] = mode
     return modes
 

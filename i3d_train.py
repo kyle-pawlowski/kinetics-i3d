@@ -20,7 +20,7 @@ num_classes = 11
 batch_size = 100
 seq_len = 76
 
-def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD'):
+def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD',seq_len=76):
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
     list_dir = os.path.join(data_dir,label_folder)   
@@ -32,7 +32,6 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='D
     #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     if 'dmd' in data_type.lower():
-        seq_len = 76
         seq_len = seq_len-4
         input_shape = (seq_len,216,216,4)
     else:

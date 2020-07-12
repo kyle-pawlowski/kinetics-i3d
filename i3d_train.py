@@ -69,6 +69,11 @@ def session_train(optimizer,epochs,data_folder):
     datax=tf.cast(datax,tf.float32)
     datay=tf.cast(datay,tf.float32)
     
+    #reshape input data for using pretrained weights
+    paddings = tf.convert_to_tensor(np.array([[0,0],[0,0],[4,4],[4,4],[0,0]]),dtype=tf.int32)
+    datax = tf.pad(datax,paddings)
+    datax = datax[:,:,:,:,:2]
+    
     #build network with fake inputs
     #flow_input = tf.placeholder(tf.float32,shape=tf.TensorShape([10,12,216,216,4]))
     #flow_answers = tf.placeholder(tf.float32,shape=(10,101))
@@ -114,14 +119,20 @@ def session_train(optimizer,epochs,data_folder):
     #evaluation
     global_step = tf.train.get_or_create_global_step()
     step_counter_hook = tf.estimator.StepCounterHook(summary_writer=train_summary_writer)
-    training_opt = optimizer.minimize(loss,var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'),
+    training_opt = optimizer.minimize(loss,var_list=
+                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Logits')+
+                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Mixed_5c')+
+                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Predictions'),
                                       global_step=tf.train.get_global_step())
     gradients = tf.gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'))
     is_chief = True
+    
+    cwd = os.getcwd()
+    pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/flow_imagenet/model.ckpt')
     #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.train.MonitoredTrainingSession(is_chief=is_chief,
                                                      hooks=[step_counter_hook],
-                                                     checkpoint_dir=checkpoint_dir,
+                                                     checkpoint_dir=pretrained_weights_dir,
                                                      summary_dir=log_dir,
                                                      save_summaries_steps=1,
                                                     save_checkpoint_steps=2) as sess:

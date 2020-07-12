@@ -20,14 +20,16 @@ num_classes = 11
 batch_size = 100
 seq_len = 76
 
-def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD',seq_len=76):
+def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='DMD',seq_len=76, is_training=True):
     cwd = os.getcwd()
     data_dir = os.path.join(cwd,'data')
     list_dir = os.path.join(data_dir,label_folder)   
     video_dir = os.path.join(data_dir,data_folder)
     train_data, test_data, class_index = get_data_list(list_dir, video_dir)
-    train_data = tf.constant(np.array(train_data))
-    test_data = tf.constant(np.array(test_data))
+    if is_training:
+        data = tf.constant(np.array(train_data))
+    else:
+        data = tf.constant(np.array(test_data))
     n = tf.constant(num_classes)
     #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
@@ -38,7 +40,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='D
         input_shape = (seq_len,216,216,2)
     return tf.data.Dataset.from_generator(sequence_generator, output_types=(tf.float64,tf.float64),
                                           output_shapes=(tf.TensorShape([batch_size,input_shape[0],input_shape[1],input_shape[2],input_shape[3]]),tf.TensorShape([batch_size,num_classes])),
-                                          args=(train_data,batch_size, input_shape, n)).repeat()
+                                          args=(data,batch_size, input_shape, n))
     
     
 #from https://www.tensorflow.org/guide/checkpoint
@@ -57,11 +59,13 @@ def train_step(net, example, optimizer):
 def session_train(optimizer,epochs,data_folder):
     #create data iterator
     if 'dmd' in dataset.lower():
-        data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist')
+        data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist').repeat()
+        validation = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist',is_training=False)
         checkpoint_dir = './tf_ckpts'
         log_dir = './logs_pretrained'
     else:
-        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF')
+        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF').repeat()
+        validation = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',is_training=False)
         checkpoint_dir = './tf_ckpts_of'
         log_dir = './logs_of'
     iterator = tf.data.make_one_shot_iterator(data)
@@ -84,6 +88,22 @@ def session_train(optimizer,epochs,data_folder):
     datax = datax/maxx
     flow_input = datax
     flow_answers = datay
+    
+    #process validation data
+    valid_iter = tf.data.make_one_shot_iterator(data)
+    valid_datax, valid_datay = valid_iter.get_next()
+    valid_datax=tf.cast(valid_datax,tf.float32)
+    valid_datay=tf.cast(valid_datay,tf.float32)
+    
+    #reshape validation data for using pretrained weights
+    valid_datax = tf.pad(valid_datax,paddings)
+    valid_datax = valid_datax[:,:,:,:,:2]
+    
+    #normalize validation data
+    valid_maxx = tf.math.reduce_max(valid_datax,axis=(2,3,4),keepdims=True)
+    valid_maxx = tf.where(valid_maxx==0,maxx,low_numbers)
+    valid_datax = valid_datax/valid_maxx
+    
     with tf.variable_scope('Flow'):
         i3d = InceptionI3d(num_classes=num_classes,spatial_squeeze=True,final_endpoint='Logits')
         logits, _ = i3d(flow_input,is_training=True)
@@ -94,6 +114,16 @@ def session_train(optimizer,epochs,data_folder):
     correct = tf.math.logical_and(guesses,tf.math.equal(flow_answers,tf.constant(1,dtype=tf.float32)))
     correct = tf.cast(correct,tf.uint8)
     accuracy = (tf.math.reduce_sum(correct)/batch_size)*100
+    
+    # create validation loss and validation accuracy
+    valid_logits, _ = i3d(valid_datax,is_training=False)
+    valid_predictions = tf.nn.softmax(valid_logits)
+    valid_loss = tf.reduce_mean(tf.abs(valid_predictions-valid_datay))
+    valid_maxes = tf.math.reduce_max(valid_predictions,axis=[1],keepdims=True)
+    valid_guesses = tf.math.equal(valid_predictions,valid_maxes)
+    valid_correct = tf.math.logical_and(valid_guesses,tf.math.equal(valid_datay,tf.constant(1,dtype=tf.float32)))
+    valid_correct = tf.cast(correct,tf.uint8)
+    valid_accuracy = (tf.math.reduce_sum(valid_correct)/batch_size)*100
     
     #create folders for summary logs
     # https://www.tensorflow.org/tensorboard/get_started
@@ -115,6 +145,10 @@ def session_train(optimizer,epochs,data_folder):
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
     layers = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow')
+    
+    # keep track of validation accuracy and loss
+    tf.summary.scalar('validation_loss', valid_loss)
+    tf.summary.scalar('validation_accuracy', valid_accuracy)
     
     #evaluation
     global_step = tf.train.get_or_create_global_step()
@@ -145,6 +179,12 @@ def session_train(optimizer,epochs,data_folder):
  
             print('loss: '+str(epoch_loss))
             print('accuracy: ' + str(epoch_accuracy))
+            
+            #validation step
+            if epoch % 10:
+                epoch_loss, epoch_accuracy = sess.run([valid_loss, valid_accuracy])
+                print('validation loss: '+str(epoch_loss))
+                print('validation accuracy: '+str(epoch_accuracy))
             #ckpt.step.assign_add(1)
             #if epoch % 2 == 0:
              # save_path = savior.save(sess, 'my_model', global_step=global_step)

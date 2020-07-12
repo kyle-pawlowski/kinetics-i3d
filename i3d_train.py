@@ -59,7 +59,7 @@ def session_train(optimizer,epochs,data_folder):
     if 'dmd' in dataset.lower():
         data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist')
         checkpoint_dir = './tf_ckpts'
-        log_dir = './logs'
+        log_dir = './logs_pretrained'
     else:
         data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF')
         checkpoint_dir = './tf_ckpts_of'
@@ -98,7 +98,7 @@ def session_train(optimizer,epochs,data_folder):
     #create folders for summary logs
     # https://www.tensorflow.org/tensorboard/get_started
     time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'logs/training' + time
+    train_log_dir = 'logs_pretrained/training' + time
     train_summary_writer = tf.summary.FileWriter(log_dir)
     
     #create variable map to save like in evaluate sample

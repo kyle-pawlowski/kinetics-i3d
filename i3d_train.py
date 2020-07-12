@@ -34,7 +34,7 @@ def data_gen(data_folder='DMD_data',label_folder='ucfTrainTestlist',data_type='D
     #batch_size = tf.constant(10)
     #class_index = tf.constant(class_index)
     if 'dmd' in data_type.lower():
-        seq_len = seq_len-4
+        seq_len = seq_len
         input_shape = (seq_len,216,216,4)
     else:
         input_shape = (seq_len,216,216,2)
@@ -59,12 +59,12 @@ def train_step(net, example, optimizer):
 def session_train(optimizer,epochs,data_folder):
     #create data iterator
     if 'dmd' in dataset.lower():
-        data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist').repeat()
+        data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist', seq_len=seq_len).repeat()
         validation = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist',is_training=False)
         checkpoint_dir = './tf_ckpts'
         log_dir = './logs_pretrained'
     else:
-        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF').repeat()
+        data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',seq_len=seq_len).repeat()
         validation = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',is_training=False)
         checkpoint_dir = './tf_ckpts_of'
         log_dir = './logs_of'

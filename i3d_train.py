@@ -62,12 +62,14 @@ def session_train(optimizer,epochs,data_folder):
         data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist', seq_len=seq_len).repeat()
         validation = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist',is_training=False)
         checkpoint_dir = './tf_ckpts'
+        pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/dmd_imagenet/model.ckpt')
         log_dir = './logs_pretrained'
     else:
         data = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',seq_len=seq_len).repeat()
         validation = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',is_training=False)
         checkpoint_dir = './tf_ckpts_of'
-        log_dir = './logs_of'
+        log_dir = './logs_of_pretrained'
+        pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/flow_imagenet/model.ckpt')
     iterator = tf.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()
     datax=tf.cast(datax,tf.float32)
@@ -162,7 +164,6 @@ def session_train(optimizer,epochs,data_folder):
     is_chief = True
     
     cwd = os.getcwd()
-    pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/flow_imagenet/model.ckpt')
     #sync_replicas_hook = optimizer.make_session_run_hook(is_chief)
     with tf.train.MonitoredTrainingSession(is_chief=is_chief,
                                                      hooks=[step_counter_hook],

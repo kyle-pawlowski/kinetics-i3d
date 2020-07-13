@@ -156,8 +156,7 @@ def session_train(optimizer,epochs,data_folder):
     training_opt = optimizer.minimize(loss,var_list=
                                       tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Logits')+
                                       tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Mixed_5c')+
-                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Predictions')+
-                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Mixed_5b'),
+                                      tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow/inception_i3d/Predictions'),
                                       global_step=tf.train.get_global_step())
     gradients = tf.gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='Flow'))
     is_chief = True
@@ -198,7 +197,7 @@ def train_network(dataset):
     '''for example in iter(data_gen()):
         print("loop")
         train_step(i3d,example,opt)'''
-    session_train(opt,100,dataset)
+    session_train(opt,200,dataset)
     
 if __name__ is "__main__":
     tf.reset_default_graph()

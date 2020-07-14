@@ -62,6 +62,7 @@ def session_train(optimizer,epochs,data_folder):
         data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist', seq_len=seq_len).repeat()
         validation = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist',is_training=False)
         checkpoint_dir = './tf_ckpts'
+        cwd=os.getcwd()
         pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/dmd_imagenet/')
         log_dir = './logs_pretrained'
     else:
@@ -69,6 +70,7 @@ def session_train(optimizer,epochs,data_folder):
         validation = data_gen(data_folder='OF_data',label_folder='ucf11TrainTestlist',data_type='OF',is_training=False)
         checkpoint_dir = './tf_ckpts_of'
         log_dir = './logs_of_pretrained'
+        cwd=os.getcwd()
         pretrained_weights_dir = os.path.join(cwd,'data/checkpoints/flow_imagenet/')
     iterator = tf.data.make_one_shot_iterator(data)
     datax,datay = iterator.get_next()

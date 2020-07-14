@@ -3,3 +3,7 @@
 data/
 logs/
 tf_ckpts/
+tf_ckpts_of
+train_save*/
+logs_of/
+logs_pretrained/

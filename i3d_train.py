@@ -56,7 +56,7 @@ def train_step(net, example, optimizer):
   optimizer.apply_gradients(zip(gradients, variables))
   return loss
 
-def session_train(optimizer,epochs,data_folder):
+def session_train(optimizer,epochs,dataset):
     #create data iterator
     if 'dmd' in dataset.lower():
         data = data_gen(data_folder='DMD_data',label_folder='ucf11TrainTestlist', seq_len=seq_len).repeat()

@@ -126,7 +126,7 @@ def session_train(optimizer,epochs,dataset):
     valid_maxes = tf.math.reduce_max(valid_predictions,axis=[1],keepdims=True)
     valid_guesses = tf.math.equal(valid_predictions,valid_maxes)
     valid_correct = tf.math.logical_and(valid_guesses,tf.math.equal(valid_datay,tf.constant(1,dtype=tf.float32)))
-    valid_correct = tf.cast(correct,tf.uint8)
+    valid_correct = tf.cast(valid_correct,tf.uint8)
     valid_accuracy = (tf.math.reduce_sum(valid_correct)/batch_size)*100
     
     #create folders for summary logs
